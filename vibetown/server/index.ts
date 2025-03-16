@@ -1,56 +1,51 @@
-import { Server } from 'colyseus';
-import { WebSocketTransport } from '@colyseus/ws-transport';
-import { monitor } from '@colyseus/monitor';
 import express from 'express';
+import http from 'http';
 import cors from 'cors';
-import { createServer } from 'http';
-import { VibeTownRoom } from './rooms/VibeTownRoom';
+import { Server } from 'colyseus';
+import { VibeTownRoom } from './room';
 
-// Create an Express app for serving the Colyseus monitor and potential REST endpoints
+// Create Express application
 const app = express();
 
-// Apply CORS middleware for cross-origin requests
-app.use(cors());
+// Configure CORS to allow all origins for development
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST']
+}));
+
+// Parse JSON bodies
 app.use(express.json());
 
-// Create an HTTP server using the Express app
-const server = createServer(app);
+// Create HTTP server
+const server = http.createServer(app);
 
-// Create a Colyseus server using WebSocket transport
+// Create Colyseus server instance
 const gameServer = new Server({
-  transport: new WebSocketTransport({
-    server
-  })
+  server: server
 });
 
-// Register the VibeTownRoom
-gameServer.define('vibetown', VibeTownRoom);
+// Define the room
+gameServer.define('vibe_town', VibeTownRoom);
 
-// Set up the Colyseus monitor route (admin panel)
-app.use('/colyseus', monitor());
+// Get port from environment variable or use 2567 as default
+const port = process.env.PORT ? parseInt(process.env.PORT) : 2567;
 
-// Start the server
-const port = Number(process.env.PORT || 2567);
+// Start listening
 gameServer.listen(port).then(() => {
-  console.log(`
-🎮 Vibe Town Server is running!
-🌐 Server listening on http://localhost:${port}
-📊 Colyseus monitor available at http://localhost:${port}/colyseus
-  `);
+  console.log(`Vibe Town server is running on http://localhost:${port}`);
+  console.log(`Colyseus WebSocket server is listening on ws://localhost:${port}`);
 }).catch(err => {
-  console.error('Error starting server:', err);
+  console.error('Failed to start server:', err);
 });
 
 // Handle graceful shutdown
-const gracefulShutdown = () => {
-  console.log('Shutting down server gracefully...');
-  gameServer.gracefullyShutdown()
-    .then(() => process.exit(0))
-    .catch(err => {
-      console.error('Error during shutdown:', err);
-      process.exit(1);
-    });
-};
-
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', () => {
+  console.log('Shutting down server...');
+  gameServer.gracefullyShutdown().then(() => {
+    console.log('Server shutdown complete');
+    process.exit(0);
+  }).catch(err => {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  });
+});
