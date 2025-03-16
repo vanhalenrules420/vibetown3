@@ -1,21 +1,31 @@
 import { Room, Client } from 'colyseus';
 import { Schema, type, MapSchema } from '@colyseus/schema';
 
-// Player schema for state synchronization
+/**
+ * Player schema for state synchronization
+ * Represents a player in the Vibe Town virtual world
+ */
 class Player extends Schema {
   @type("number") x: number = 0;
   @type("number") y: number = 0;
-  @type("boolean") isSpeaking: boolean = false;
-  @type("string") name: string = "";
+  @type("string") nickname: string = "";
+  @type("string") peerId: string = "";  // For PeerJS voice chat integration
+  @type("boolean") muted: boolean = false;
 }
 
-// Game state schema
-class VibeTownState extends Schema {
+/**
+ * Game state schema
+ * Contains all players in the room
+ */
+class State extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
 }
 
-// VibeTownRoom implementation
-export class VibeTownRoom extends Room<VibeTownState> {
+/**
+ * VibeTownRoom implementation
+ * Handles player connections, state synchronization, and message handling
+ */
+export class VibeTownRoom extends Room<State> {
   // Maximum number of clients allowed in this room
   maxClients = 16;
 
@@ -23,40 +33,40 @@ export class VibeTownRoom extends Room<VibeTownState> {
     console.log("VibeTownRoom created!", options);
 
     // Initialize room state
-    this.setState(new VibeTownState());
-
-    // Set simulation interval for game loop (60 fps)
-    this.setSimulationInterval((deltaTime) => this.update(deltaTime), 1000 / 60);
+    this.setState(new State());
 
     // Register message handlers with error handling
     this.onMessage("move", (client, data) => {
       try {
-        const player = this.state.players.get(client.sessionId);
-        if (player) {
-          player.x = data.x;
-          player.y = data.y;
-        }
+        this.handleMove(client, data);
       } catch (error) {
         console.error("Error handling move message:", error);
       }
     });
 
-    this.onMessage("speak", (client, data) => {
+    this.onMessage("setNickname", (client, data) => {
       try {
-        const player = this.state.players.get(client.sessionId);
-        if (player) {
-          player.isSpeaking = data.isSpeaking;
-        }
+        this.handleSetNickname(client, data);
       } catch (error) {
-        console.error("Error handling speak message:", error);
+        console.error("Error handling setNickname message:", error);
       }
     });
-  }
 
-  // Game update loop
-  update(deltaTime: number) {
-    // Implement game logic here if needed
-    // This runs on the server at 60fps
+    this.onMessage("peerId", (client, data) => {
+      try {
+        this.handlePeerId(client, data);
+      } catch (error) {
+        console.error("Error handling peerId message:", error);
+      }
+    });
+
+    this.onMessage("mute", (client, data) => {
+      try {
+        this.handleMute(client, data);
+      } catch (error) {
+        console.error("Error handling mute message:", error);
+      }
+    });
   }
 
   onJoin(client: Client, options: any) {
@@ -68,11 +78,6 @@ export class VibeTownRoom extends Room<VibeTownState> {
     // Set initial position (can be random or predefined)
     player.x = Math.floor(Math.random() * 400) + 50;
     player.y = Math.floor(Math.random() * 400) + 50;
-    
-    // Set player name if provided
-    if (options.name) {
-      player.name = options.name;
-    }
     
     // Add player to the room state
     this.state.players.set(client.sessionId, player);
@@ -87,5 +92,84 @@ export class VibeTownRoom extends Room<VibeTownState> {
 
   onDispose() {
     console.log("Room disposed");
+  }
+
+  /**
+   * Handle player movement
+   * Updates the player's position in the game world
+   */
+  private handleMove(client: Client, data: { x: number, y: number }) {
+    const player = this.state.players.get(client.sessionId);
+    if (player) {
+      player.x = data.x;
+      player.y = data.y;
+    }
+  }
+
+  /**
+   * Handle nickname setting
+   * Validates nickname length and uniqueness
+   */
+  private handleSetNickname(client: Client, data: { nickname: string }) {
+    const player = this.state.players.get(client.sessionId);
+    if (!player) return;
+
+    const nickname = data.nickname.trim();
+    
+    // Validate nickname length (3-16 characters)
+    if (nickname.length < 3 || nickname.length > 16) {
+      client.send("error", { 
+        message: "Nickname must be between 3 and 16 characters",
+        code: "INVALID_NICKNAME_LENGTH"
+      });
+      return;
+    }
+    
+    // Check for nickname uniqueness
+    let isUnique = true;
+    let suffix = 1;
+    let suggestedNickname = nickname;
+    
+    // Check if any other player has the same nickname
+    this.state.players.forEach((otherPlayer, sessionId) => {
+      if (sessionId !== client.sessionId && otherPlayer.nickname === nickname) {
+        isUnique = false;
+        suggestedNickname = `${nickname}${suffix}`;
+        suffix++;
+      }
+    });
+    
+    if (isUnique) {
+      player.nickname = nickname;
+    } else {
+      // Send error with suggested alternative
+      client.send("error", { 
+        message: "Nickname already taken",
+        code: "NICKNAME_TAKEN",
+        suggestion: suggestedNickname
+      });
+    }
+  }
+
+  /**
+   * Handle PeerJS ID setting
+   * Updates the player's PeerJS ID for voice chat
+   */
+  private handlePeerId(client: Client, data: { peerId: string }) {
+    const player = this.state.players.get(client.sessionId);
+    if (player && data.peerId) {
+      player.peerId = data.peerId;
+    }
+  }
+
+  /**
+   * Handle mute status
+   * Updates the player's mute status for voice chat
+   */
+  private handleMute(client: Client, data: { muted: boolean }) {
+    const player = this.state.players.get(client.sessionId);
+    if (player) {
+      player.muted = data.muted;
+    }
   }
 }
