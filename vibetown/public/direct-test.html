@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Town Direct Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #222;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #444;
+            position: relative;
+        }
+        #logs {
+            width: 800px;
+            height: 200px;
+            overflow-y: auto;
+            background-color: #333;
+            margin-top: 20px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error { color: #ff6b6b; }
+        .info { color: #74c0fc; }
+        .log { color: #eee; }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="logs"></div>
+
+    <!-- Load Phaser directly -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    
+    <script>
+        // Create a logs container
+        const logsDiv = document.getElementById('logs');
+        
+        // Override console methods to display in our logs div
+        const originalConsole = {
+            log: console.log,
+            info: console.info,
+            error: console.error
+        };
+        
+        function addLog(message, type = 'log') {
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.textContent = `[${new Date().toISOString()}] [${type.toUpperCase()}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            
+            // Also log to the original console
+            originalConsole[type].call(console, message);
+        }
+        
+        console.log = function(message) {
+            addLog(message, 'log');
+        };
+        
+        console.info = function(message) {
+            addLog(message, 'info');
+        };
+        
+        console.error = function(message) {
+            addLog(message, 'error');
+        };
+        
+        // Capture global errors
+        window.addEventListener('error', function(event) {
+            addLog(`ERROR: ${event.message} at ${event.filename}:${event.lineno}`, 'error');
+        });
+        
+        // Simple MainScene implementation
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+                console.log('MainScene constructor called');
+            }
+            
+            preload() {
+                console.log('MainScene: preload started');
+                
+                // Load a simple placeholder
+                this.load.image('player', 'placeholder-player.png');
+                
+                console.log('MainScene: preload completed');
+            }
+            
+            create() {
+                console.log('MainScene: create started');
+                
+                try {
+                    // Create a simple colored background
+                    this.add.rectangle(0, 0, 800, 600, 0x4a7ba7).setOrigin(0, 0);
+                    
+                    // Create a player sprite
+                    this.player = this.physics.add.sprite(400, 300, 'player');
+                    this.player.setCollideWorldBounds(true);
+                    
+                    // Set up player input
+                    this.cursors = this.input.keyboard.createCursorKeys();
+                    
+                    console.log('MainScene: create completed successfully');
+                } catch (error) {
+                    console.error('Error in create:', error);
+                    this.add.text(10, 10, 'Error: ' + error, { color: 'red' });
+                }
+            }
+            
+            update() {
+                // Simple movement
+                if (this.player && this.cursors) {
+                    // Reset velocity
+                    this.player.setVelocity(0);
+                    
+                    const speed = 200;
+                    
+                    if (this.cursors.left.isDown) {
+                        this.player.setVelocityX(-speed);
+                    } else if (this.cursors.right.isDown) {
+                        this.player.setVelocityX(speed);
+                    }
+                    
+                    if (this.cursors.up.isDown) {
+                        this.player.setVelocityY(-speed);
+                    } else if (this.cursors.down.isDown) {
+                        this.player.setVelocityY(speed);
+                    }
+                }
+            }
+        }
+        
+        // Initialize Phaser
+        console.log('Initializing Phaser game...');
+        try {
+            const config = {
+                type: Phaser.AUTO,
+                width: 800,
+                height: 600,
+                parent: 'game-container',
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        gravity: { x: 0, y: 0 },
+                        debug: true
+                    }
+                },
+                scene: [MainScene]
+            };
+            
+            const game = new Phaser.Game(config);
+            console.log('Phaser game initialized successfully');
+            
+            // Store game instance on window to prevent garbage collection
+            window.game = game;
+        } catch (error) {
+            console.error('Failed to initialize Phaser game:', error);
+            const errorElement = document.createElement('div');
+            errorElement.style.color = 'red';
+            errorElement.style.backgroundColor = 'black';
+            errorElement.style.padding = '10px';
+            errorElement.textContent = `Failed to initialize Phaser game: ${error}`;
+            document.getElementById('game-container').appendChild(errorElement);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Spritesheet Validator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .preview {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .preview h2 {
+            margin-top: 0;
+        }
+        .sprite-container {
+            background-color: #eee;
+            border: 1px dashed #999;
+            display: inline-block;
+            padding: 10px;
+        }
+        .frame-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .frame {
+            text-align: center;
+        }
+        .frame canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            margin-bottom: 5px;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Player Spritesheet Validator</h1>
+    
+    <div>
+        <h2>Input Data URI</h2>
+        <textarea id="dataUriInput" placeholder="Paste your data URI here..."></textarea>
+        <button id="validateButton">Validate Spritesheet</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <div class="container">
+        <div class="preview">
+            <h2>Full Spritesheet</h2>
+            <div class="sprite-container">
+                <img id="spritePreview" alt="Spritesheet Preview" style="display: none;">
+            </div>
+        </div>
+        
+        <div class="preview">
+            <h2>Individual Frames</h2>
+            <div class="frame-container">
+                <div class="frame">
+                    <canvas id="frame0" width="32" height="32"></canvas>
+                    <div>Down (Frame 1)</div>
+                </div>
+                <div class="frame">
+                    <canvas id="frame1" width="32" height="32"></canvas>
+                    <div>Left (Frame 2)</div>
+                </div>
+                <div class="frame">
+                    <canvas id="frame2" width="32" height="32"></canvas>
+                    <div>Right (Frame 3)</div>
+                </div>
+                <div class="frame">
+                    <canvas id="frame3" width="32" height="32"></canvas>
+                    <div>Up (Frame 4)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="spritesheet-validator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dataUriInput = document.getElementById('dataUriInput');
+            const validateButton = document.getElementById('validateButton');
+            const resultsDiv = document.getElementById('results');
+            const spritePreview = document.getElementById('spritePreview');
+            
+            // Extract individual frames from the spritesheet
+            function extractFrames(image) {
+                for (let i = 0; i < 4; i++) {
+                    const canvas = document.getElementById(`frame${i}`);
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Clear canvas
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw the specific frame from the spritesheet
+                    // Each frame is 32x32, arranged vertically
+                    ctx.drawImage(
+                        image,
+                        0, i * 32, 32, 32, // Source coordinates (x, y, width, height)
+                        0, 0, 32, 32       // Destination coordinates (x, y, width, height)
+                    );
+                }
+            }
+            
+            validateButton.addEventListener('click', async () => {
+                const dataUri = dataUriInput.value.trim();
+                
+                if (!dataUri) {
+                    resultsDiv.className = 'error';
+                    resultsDiv.innerHTML = '<p>Please enter a data URI.</p>';
+                    return;
+                }
+                
+                try {
+                    const results = await validatePlayerSpritesheet(dataUri);
+                    
+                    if (results.isValid) {
+                        resultsDiv.className = 'success';
+                        resultsDiv.innerHTML = `
+                            <h3>✅ Validation Successful</h3>
+                            <p>The spritesheet meets all requirements:</p>
+                            <ul>
+                                <li>Width: ${results.dimensions.width}px (expected: 32px)</li>
+                                <li>Height: ${results.dimensions.height}px (expected: 128px)</li>
+                            </ul>
+                        `;
+                        
+                        // Show the spritesheet preview
+                        spritePreview.src = dataUri;
+                        spritePreview.style.display = 'block';
+                        
+                        // Extract and display individual frames
+                        extractFrames(spritePreview);
+                    } else {
+                        resultsDiv.className = 'error';
+                        resultsDiv.innerHTML = `
+                            <h3>❌ Validation Failed</h3>
+                            <p>The spritesheet does not meet all requirements:</p>
+                            <ul>
+                                ${results.errors.map(error => `<li>${error}</li>`).join('')}
+                            </ul>
+                        `;
+                    }
+                } catch (error) {
+                    resultsDiv.className = 'error';
+                    resultsDiv.innerHTML = `
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

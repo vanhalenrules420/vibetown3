@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standalone Phaser Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            width: 800px;
+            height: 600px;
+            margin: 20px auto;
+            border: 2px solid #444;
+        }
+        #debug {
+            width: 800px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #333;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="debug"></div>
+
+    <!-- Load Phaser directly -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    
+    <script>
+        // Debug logging
+        const debugDiv = document.getElementById('debug');
+        
+        function log(message, type = 'info') {
+            console[type] ? console[type](message) : console.log(message);
+            const line = document.createElement('div');
+            line.style.color = type === 'error' ? '#ff5555' : type === 'warn' ? '#ffaa55' : '#aaffaa';
+            line.textContent = `[${new Date().toISOString().split('T')[1].split('.')[0]}] [${type.toUpperCase()}] ${message}`;
+            debugDiv.appendChild(line);
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+        
+        // Capture errors
+        window.addEventListener('error', (event) => {
+            log(`Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`, 'error');
+        });
+        
+        // Very simple scene
+        class SimpleScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'SimpleScene' });
+                log('SimpleScene constructor called');
+            }
+            
+            preload() {
+                log('SimpleScene: preload started');
+                
+                // Create a simple colored rectangle as a placeholder
+                this.load.image('box', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAFklEQVRYhe3QMQEAAAjDMMC/56EB3omEXwLYiAVJLgF0HAA6');
+                
+                log('SimpleScene: preload completed');
+            }
+            
+            create() {
+                log('SimpleScene: create started');
+                
+                // Add a background
+                this.add.rectangle(400, 300, 800, 600, 0x4a7ba7);
+                
+                // Add a sprite
+                this.player = this.physics.add.image(400, 300, 'box');
+                this.player.setTint(0xff0000);
+                this.player.setDisplaySize(50, 50);
+                
+                // Set up input
+                this.cursors = this.input.keyboard.createCursorKeys();
+                
+                log('SimpleScene: create completed');
+            }
+            
+            update() {
+                if (this.player && this.cursors) {
+                    // Reset velocity
+                    this.player.setVelocity(0);
+                    
+                    // Handle movement
+                    const speed = 200;
+                    
+                    if (this.cursors.left.isDown) {
+                        this.player.setVelocityX(-speed);
+                    } else if (this.cursors.right.isDown) {
+                        this.player.setVelocityX(speed);
+                    }
+                    
+                    if (this.cursors.up.isDown) {
+                        this.player.setVelocityY(-speed);
+                    } else if (this.cursors.down.isDown) {
+                        this.player.setVelocityY(speed);
+                    }
+                }
+            }
+        }
+        
+        // Initialize Phaser
+        log('Starting Phaser initialization');
+        
+        try {
+            const config = {
+                type: Phaser.AUTO,
+                width: 800,
+                height: 600,
+                parent: 'game-container',
+                backgroundColor: '#2d2d2d',
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        gravity: { x: 0, y: 0 },
+                        debug: true
+                    }
+                },
+                scene: [SimpleScene]
+            };
+            
+            log('Phaser config created');
+            
+            // Create the game instance
+            const game = new Phaser.Game(config);
+            
+            // Store on window for debugging
+            window.game = game;
+            
+            log('Phaser game created successfully');
+        } catch (error) {
+            log(`Error initializing Phaser: ${error.message}`, 'error');
+            if (error.stack) {
+                log(`Stack trace: ${error.stack}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

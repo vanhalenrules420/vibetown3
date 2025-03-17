@@ -1,0 +1,94 @@
+{
+    "version": 1.10,
+    "tiledversion": "1.10.2",
+    "orientation": "orthogonal",
+    "renderorder": "right-down",
+    "width": 20,
+    "height": 15,
+    "tilewidth": 32,
+    "tileheight": 32,
+    "infinite": false,
+    "nextlayerid": 3,
+    "nextobjectid": 1,
+    "properties": [],
+    "tilesets": [
+        {
+            "name": "vibetown-tileset",
+            "tilewidth": 32,
+            "tileheight": 32,
+            "tilecount": 2,
+            "columns": 2,
+            "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAACm53kpAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA+klEQVRYhe2XMQ6DMAxFHwwMHVggJI7AEThCj9Aj9Ag9Qo/QI/QIHQEJiQUGBgZkS0VVVVJIU9LS/yUvTuLYz06cAIZhGIZRNRpYgBHogfvveQJuQAuMwJpKOQAXYAa6Lz0BV6AFRmCpjPzJAZiBDrh96QlcgA4YgLky8kcDc+TgDZiBHlgqJH80MEdO3oAJuFRK/mhgTkjeJvmTgTmh5G2SPxmYE0reJvmTgTmx5K1P/mRgTip565I/GZiTS96q5E8G5pSStyb5k4E5ueStSP5kYE4peeuRPxmYU0re6uQPBuaUlrc2+YOBOaXlrU3+YGDOHvLWJL8BPwVDSWHJHiUAAAAASUVORK5CYII=",
+            "tiles": [
+                {
+                    "id": 0,
+                    "properties": [
+                        {
+                            "name": "collides",
+                            "type": "bool",
+                            "value": true
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "layers": [
+        {
+            "id": 1,
+            "name": "Ground",
+            "width": 20,
+            "height": 15,
+            "opacity": 1,
+            "visible": true,
+            "type": "tilelayer",
+            "x": 0,
+            "y": 0,
+            "data": [
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Walls",
+            "width": 20,
+            "height": 15,
+            "opacity": 1,
+            "visible": true,
+            "type": "tilelayer",
+            "x": 0,
+            "y": 0,
+            "data": [
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+            ]
+        }
+    ]
+}

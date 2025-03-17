@@ -5,7 +5,7 @@ import { Schema, type, MapSchema } from '@colyseus/schema';
  * Player schema for state synchronization
  * Represents a player in the Vibe Town virtual world
  */
-class Player extends Schema {
+export class Player extends Schema {
   @type("number") x: number = 0;
   @type("number") y: number = 0;
   @type("string") nickname: string = "";
@@ -17,7 +17,7 @@ class Player extends Schema {
  * Game state schema
  * Contains all players in the room
  */
-class State extends Schema {
+export class VibeTownState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
 }
 
@@ -25,7 +25,7 @@ class State extends Schema {
  * VibeTownRoom implementation
  * Handles player connections, state synchronization, and message handling
  */
-export class VibeTownRoom extends Room<State> {
+export class VibeTownRoom extends Room<VibeTownState> {
   // Maximum number of clients allowed in this room
   maxClients = 16;
 
@@ -33,7 +33,7 @@ export class VibeTownRoom extends Room<State> {
     console.log("VibeTownRoom created!", options);
 
     // Initialize room state
-    this.setState(new State());
+    this.setState(new VibeTownState());
 
     // Register message handlers with error handling
     this.onMessage("move", (client, data) => {

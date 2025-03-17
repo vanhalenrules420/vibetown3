@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #3498db;
+        }
+        .debug-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debug"></div>
+    <div id="game-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script>
+        // Debug logging
+        const debug = document.getElementById('debug');
+        function log(message) {
+            debug.innerHTML += message + '<br>';
+            console.log(message);
+        }
+
+        log('Starting Phaser test...');
+
+        // Simple scene
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+                log('MainScene constructor called');
+            }
+
+            preload() {
+                log('Preload started');
+                this.load.image('player', 'placeholder-player.png');
+                this.load.image('otherPlayer', 'placeholder-other-player.png');
+                log('Preload completed');
+            }
+
+            create() {
+                log('Create started');
+                
+                // Create a blue background
+                this.add.rectangle(0, 0, 800, 600, 0x4a7ba7).setOrigin(0, 0);
+                
+                // Create player sprite
+                this.player = this.physics.add.sprite(400, 300, 'player');
+                this.player.setCollideWorldBounds(true);
+                
+                // Set up cursor keys
+                this.cursors = this.input.keyboard.createCursorKeys();
+                
+                log('Create completed');
+            }
+
+            update() {
+                if (!this.player || !this.cursors) return;
+                
+                // Reset velocity
+                this.player.setVelocity(0);
+                
+                // Handle movement
+                const speed = 200;
+                
+                if (this.cursors.left.isDown) {
+                    this.player.setVelocityX(-speed);
+                } else if (this.cursors.right.isDown) {
+                    this.player.setVelocityX(speed);
+                }
+                
+                if (this.cursors.up.isDown) {
+                    this.player.setVelocityY(-speed);
+                } else if (this.cursors.down.isDown) {
+                    this.player.setVelocityY(speed);
+                }
+                
+                // Normalize diagonal movement
+                if (this.player.body.velocity.x !== 0 && this.player.body.velocity.y !== 0) {
+                    this.player.body.velocity.normalize().scale(speed);
+                }
+            }
+        }
+
+        // Game configuration
+        try {
+            log('Creating Phaser game config');
+            const config = {
+                type: Phaser.AUTO,
+                parent: 'game-container',
+                width: 800,
+                height: 600,
+                backgroundColor: '#333333',
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        gravity: { x: 0, y: 0 },
+                        debug: false
+                    }
+                },
+                scene: [MainScene]
+            };
+            
+            log('Initializing Phaser game');
+            const game = new Phaser.Game(config);
+            log('Phaser game initialized successfully');
+        } catch (error) {
+            log('Error creating Phaser game: ' + error.message);
+            console.error(error);
+        }
+    </script>
+</body>
+</html>

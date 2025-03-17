@@ -62,3 +62,16 @@
 - Implement basic tests for critical functionality using Vitest
 - Run the application and verify core functionality
 - Implement player movement and collision detection
+## 2025-03-16
+
+### Scene Implementation
+- Created initial structure for MainScene.ts
+- Set up class properties for multiplayer, player sprites, and voice chat
+- Added placeholder preload method with empty data URIs for assets
+- Followed modular architecture principles with clear TypeScript typing
+
+Next steps:
+- Implement create() and update() methods
+- Connect to Colyseus server
+- Handle player movement and collision
+- Integrate voice chat functionality

@@ -1,3 +1,5 @@
+import './index.css'
+
 import Phaser from 'phaser';
 import MainScene from './scenes/MainScene';
 
@@ -16,6 +18,16 @@ window.addEventListener('error', (event) => {
 console.log('Starting Vibe Town initialization...');
 
 try {
+  // Get the game container
+  const gameContainer = document.getElementById('game-container');
+  
+  if (!gameContainer) {
+    throw new Error('Game container not found! Make sure there is a div with id="game-container" in your HTML.');
+  }
+  
+  // Log container found
+  console.log('Game container found, initializing Phaser...');
+  
   // Configure the Phaser game
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -25,7 +37,7 @@ try {
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { y: 0 },
+        gravity: { x: 0, y: 0 }, 
         debug: false
       }
     },

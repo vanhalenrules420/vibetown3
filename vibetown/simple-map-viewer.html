@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Vibe Town Map Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .map-container {
+            display: grid;
+            grid-template-columns: repeat(20, 32px);
+            grid-template-rows: repeat(15, 32px);
+            gap: 1px;
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .tile {
+            width: 32px;
+            height: 32px;
+            box-sizing: border-box;
+        }
+        .ground {
+            background-color: #4CAF50;
+        }
+        .wall {
+            background-color: #9E9E9E;
+        }
+        .empty {
+            background-color: transparent;
+        }
+        .legend {
+            display: flex;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+        }
+        .description {
+            margin-top: 20px;
+            max-width: 700px;
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vibe Town Map (20x15 tiles)</h1>
+    
+    <div class="map-container" id="map"></div>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color ground"></div>
+            <span>Ground (Walkable)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color wall"></div>
+            <span>Wall (Collision)</span>
+        </div>
+    </div>
+    
+    <div class="description">
+        <p>This is a visualization of the Tiled map for Vibe Town. The map is 20x15 tiles (each tile is 32x32 pixels).</p>
+        <p>The green areas represent walkable ground, while the gray areas represent walls with collision.</p>
+        <p>In the actual game, players will be able to move around the green areas but will collide with the walls.</p>
+    </div>
+
+    <script>
+        // Map data from vibetown.json
+        const groundLayer = [
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+        ];
+
+        const wallsLayer = [
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+        ];
+
+        // Render the map
+        const mapContainer = document.getElementById('map');
+        
+        // Total number of tiles
+        const width = 20;
+        const height = 15;
+        const totalTiles = width * height;
+        
+        // Create all tiles
+        for (let i = 0; i < totalTiles; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            
+            // Add appropriate class based on the layers
+            if (wallsLayer[i] === 1) {
+                tile.classList.add('wall');
+            } else if (groundLayer[i] === 2) {
+                tile.classList.add('ground');
+            } else {
+                tile.classList.add('empty');
+            }
+            
+            mapContainer.appendChild(tile);
+        }
+    </script>
+</body>
+</html>

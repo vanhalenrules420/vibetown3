@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Vibe Town Map Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #333;
+        }
+        #game-container {
+            border: 2px solid #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <script>
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super('MainScene');
+            }
+
+            preload() {
+                // Load the tilemap JSON
+                this.load.tilemapTiledJSON('map', 'vibetown.json');
+                
+                // Create a simple tileset image from the base64 data in the JSON
+                // This is just for visualization purposes
+                const tilesetData = {
+                    "name": "vibetown-tileset",
+                    "tilewidth": 32,
+                    "tileheight": 32,
+                    "tilecount": 2,
+                    "columns": 2,
+                    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAACm53kpAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA+klEQVRYhe2XMQ6DMAxFHwwMHVggJI7AEThCj9Aj9Ag9Qo/QI/QIHQEJiQUGBgZkS0VVVVJIU9LS/yUvTuLYz06cAIZhGIZRNRpYgBHogfvveQJuQAuMwJpKOQAXYAa6Lz0BV6AFRmCpjPzJAZiBDrh96QlcgA4YgLky8kcDc+TgDZiBHlgqJH80MEdO3oAJuFRK/mhgTkjeJvmTgTmh5G2SPxmYE0reJvmTgTmx5K1P/mRgTip565I/GZiTS96q5E8G5pSStyb5k4E5ueStSP5kYE4peeuRPxmYU0re6uQPBuaUlrc2+YOBOaXlrU3+YGDOHvLWJL8BPwVDSWHJHiUAAAAASUVORK5CYII="
+                };
+
+                // Create a temporary canvas to draw the tileset
+                const img = new Image();
+                img.src = tilesetData.image;
+                
+                img.onload = () => {
+                    // Create a canvas element
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 64; // 2 tiles x 32px
+                    canvas.height = 32; // 1 row x 32px
+                    
+                    // Get the 2D rendering context
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert the canvas to a data URL
+                    const dataURL = canvas.toDataURL();
+                    
+                    // Load the image into Phaser
+                    this.textures.addBase64('tiles', dataURL);
+                };
+            }
+
+            create() {
+                // Wait a moment for the tileset image to load
+                setTimeout(() => {
+                    // Create the tilemap
+                    const map = this.make.tilemap({ key: 'map' });
+                    
+                    // Add the tileset
+                    const tileset = map.addTilesetImage('vibetown-tileset', 'tiles');
+                    
+                    // Create the layers
+                    if (tileset) {
+                        const groundLayer = map.createLayer('Ground', tileset);
+                        const wallsLayer = map.createLayer('Walls', tileset);
+                        
+                        // Set collision for walls
+                        wallsLayer.setCollisionByProperty({ collides: true });
+                        
+                        // Add a player sprite for scale reference
+                        const player = this.add.rectangle(320, 240, 16, 16, 0xff0000);
+                        
+                        // Set camera to follow player
+                        this.cameras.main.startFollow(player);
+                        this.cameras.main.setZoom(2); // Zoom in to see the tiles better
+                    }
+                }, 500);
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 640,
+            height: 480,
+            parent: 'game-container',
+            scene: [MainScene],
+            pixelArt: true,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: true
+                }
+            }
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>

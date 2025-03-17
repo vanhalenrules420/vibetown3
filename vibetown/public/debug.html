@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Console</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #222;
+            color: #eee;
+            padding: 20px;
+        }
+        #logs {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .error { color: #ff6b6b; }
+        .warn { color: #ffa94d; }
+        .info { color: #74c0fc; }
+        .log { color: #eee; }
+        button {
+            background-color: #4a7ba7;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 10px 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3a6a96;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Console</h1>
+    <button id="checkGame">Check Game Status</button>
+    <div id="logs"></div>
+
+    <script>
+        const logsElement = document.getElementById('logs');
+        const checkGameButton = document.getElementById('checkGame');
+        
+        // Function to add log entry
+        function addLog(message, type = 'log') {
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.textContent = `[${new Date().toISOString()}] [${type.toUpperCase()}] ${message}`;
+            logsElement.appendChild(entry);
+            logsElement.scrollTop = logsElement.scrollHeight;
+        }
+        
+        // Check if Phaser game is running
+        checkGameButton.addEventListener('click', () => {
+            try {
+                addLog('Checking game status...', 'info');
+                
+                // Check if Phaser exists
+                if (typeof Phaser === 'undefined') {
+                    addLog('Phaser is not defined. Game may not be loaded.', 'error');
+                } else {
+                    addLog('Phaser is defined.', 'info');
+                }
+                
+                // Check if game instance exists on window
+                if (window.game) {
+                    addLog('Game instance found on window object.', 'info');
+                    addLog(`Game width: ${window.game.config.width}, height: ${window.game.config.height}`, 'info');
+                    addLog(`Game type: ${window.game.config.type}`, 'info');
+                    addLog(`Active scenes: ${window.game.scene.scenes.map(s => s.scene.key).join(', ')}`, 'info');
+                } else {
+                    addLog('No game instance found on window object.', 'error');
+                }
+                
+                // Check game container
+                const gameContainer = document.getElementById('game-container');
+                if (gameContainer) {
+                    addLog('Game container found.', 'info');
+                    addLog(`Container children: ${gameContainer.children.length}`, 'info');
+                    if (gameContainer.children.length > 0) {
+                        addLog(`First child tag: ${gameContainer.children[0].tagName}`, 'info');
+                    }
+                } else {
+                    addLog('Game container not found.', 'error');
+                }
+                
+                // Check for canvas elements
+                const canvases = document.getElementsByTagName('canvas');
+                if (canvases.length > 0) {
+                    addLog(`Found ${canvases.length} canvas elements.`, 'info');
+                    for (let i = 0; i < canvases.length; i++) {
+                        addLog(`Canvas ${i}: width=${canvases[i].width}, height=${canvases[i].height}`, 'info');
+                    }
+                } else {
+                    addLog('No canvas elements found. Phaser may not be rendering.', 'error');
+                }
+                
+                // Check for errors
+                if (window.gameErrors && window.gameErrors.length > 0) {
+                    addLog(`Found ${window.gameErrors.length} game errors:`, 'error');
+                    window.gameErrors.forEach(err => {
+                        addLog(err, 'error');
+                    });
+                }
+            } catch (error) {
+                addLog(`Error checking game status: ${error.message}`, 'error');
+            }
+        });
+        
+        // Capture console messages
+        const originalConsole = {
+            log: console.log,
+            info: console.info,
+            warn: console.warn,
+            error: console.error
+        };
+        
+        console.log = function(...args) {
+            addLog(args.join(' '), 'log');
+            originalConsole.log.apply(console, args);
+        };
+        
+        console.info = function(...args) {
+            addLog(args.join(' '), 'info');
+            originalConsole.info.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            addLog(args.join(' '), 'warn');
+            originalConsole.warn.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            addLog(args.join(' '), 'error');
+            originalConsole.error.apply(console, args);
+        };
+        
+        // Capture global errors
+        window.gameErrors = [];
+        window.addEventListener('error', (event) => {
+            const errorMsg = `${event.message} at ${event.filename}:${event.lineno}:${event.colno}`;
+            window.gameErrors.push(errorMsg);
+            addLog(errorMsg, 'error');
+        });
+        
+        // Initial log
+        addLog('Debug console initialized', 'info');
+        addLog('Click "Check Game Status" to inspect the Phaser game state', 'info');
+    </script>
+</body>
+</html>

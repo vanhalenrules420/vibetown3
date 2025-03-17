@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #333;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vibe Town Debug Page</h1>
+        
+        <div id="serverStatus" class="status">Checking server status...</div>
+        
+        <div>
+            <button id="checkServer">Check Server</button>
+            <button id="checkClient">Check Client</button>
+        </div>
+        
+        <h2>Console Output</h2>
+        <pre id="consoleOutput"></pre>
+    </div>
+
+    <script>
+        // Function to log messages to our custom console
+        function log(message) {
+            const consoleOutput = document.getElementById('consoleOutput');
+            consoleOutput.textContent += message + '\n';
+        }
+
+        // Function to check server status
+        async function checkServer() {
+            const serverStatus = document.getElementById('serverStatus');
+            try {
+                log('Checking server at http://localhost:2567...');
+                const response = await fetch('http://localhost:2567');
+                
+                if (response.ok) {
+                    serverStatus.textContent = 'Server is running at http://localhost:2567';
+                    serverStatus.className = 'status success';
+                    log('Server is running!');
+                } else {
+                    serverStatus.textContent = `Server returned status: ${response.status}`;
+                    serverStatus.className = 'status error';
+                    log(`Server error: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                serverStatus.textContent = 'Could not connect to server: ' + error.message;
+                serverStatus.className = 'status error';
+                log('Server connection error: ' + error.message);
+            }
+        }
+
+        // Function to check client resources
+        function checkClient() {
+            log('Checking client resources...');
+            
+            // Check if main.tsx is accessible
+            fetch('/src/main.tsx')
+                .then(response => {
+                    if (response.ok) {
+                        log('✅ main.tsx is accessible');
+                    } else {
+                        log('❌ main.tsx returned status: ' + response.status);
+                    }
+                })
+                .catch(error => {
+                    log('❌ Error accessing main.tsx: ' + error.message);
+                });
+                
+            // Check if App.tsx is accessible
+            fetch('/src/App.tsx')
+                .then(response => {
+                    if (response.ok) {
+                        log('✅ App.tsx is accessible');
+                    } else {
+                        log('❌ App.tsx returned status: ' + response.status);
+                    }
+                })
+                .catch(error => {
+                    log('❌ Error accessing App.tsx: ' + error.message);
+                });
+                
+            // Check browser information
+            log('Browser information:');
+            log('User Agent: ' + navigator.userAgent);
+            log('Window size: ' + window.innerWidth + 'x' + window.innerHeight);
+        }
+
+        // Add event listeners to buttons
+        document.getElementById('checkServer').addEventListener('click', checkServer);
+        document.getElementById('checkClient').addEventListener('click', checkClient);
+        
+        // Run server check on page load
+        window.addEventListener('load', checkServer);
+    </script>
+</body>
+</html>
